@@ -29,6 +29,9 @@ class InstalingBOT:
     ShowPasswordPath = '/html/body/div[1]/div[3]/form/div/div[1]/div[2]/div[1]/a/i'
     ConfirmLoginPath = '/html/body/div[1]/div[3]/form/div/div[3]/button'
 
+    WordsEnterPath = '//*[@id="children"]/tbody/tr'
+    StartLearningPath = '//*[@id="parent_panel"]/p[1]/a'
+
     StartSessionPath = '/html/body/div[1]/div[2]/div/p[1]/a'
     StartSession2Path = '//*[@id="start_session_button"]'
     ContinueSessionPath = '//*[@id="continue_session_button"]'
@@ -70,7 +73,7 @@ class InstalingBOT:
         return 0
 
     def close_web_browser(self):
-        self.driver.close()
+        self.driver.quit()
     def init_login_password(self,login:str, password:str):
         self.loginData = login
         self.passwordData = password
@@ -147,6 +150,26 @@ class InstalingBOT:
             print(f"Error: {str(e)}")
             return 1
         return 0
+
+    def get_session_parent_account(self):
+        try:
+
+            time.sleep(random.uniform(0.5,1.0)) # logout
+            WordsEnter = WebDriverWait(self.driver,3).until(EC.presence_of_element_located((By.XPATH,self.WordsEnterPath)))
+            self.move_to_click(WordsEnter)
+
+            time.sleep(random.uniform(0.5, 1.0))  # logout
+            StartLearning = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, self.StartLearningPath)))
+            self.move_to_click(WordsEnter)
+
+        except TimeoutException as e:
+            print(f"TLE: {str(e)}")
+            return 1
+        except WebDriverException as e:
+            print(f"Error: {str(e)}")
+            return 1
+        return 0
+
     def make_session(self) -> int:
 
         try:

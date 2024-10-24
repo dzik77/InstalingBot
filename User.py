@@ -5,20 +5,21 @@ class User:
     path = resoursce_path('user.json')
     login: str = ''
     password: str = ''
+    parentAccount: bool = False
     def __init__(self):
         try:
             with open(self.path, 'r') as f:
                 user = json.load(f)
         except (FileNotFoundError, json.JSONDecodeError):
-            user = {}
+            user = []
 
         if user:
-            self.login, self.password = list(user.items())[0]
+            self.login, self.password, self.parentAccount = user
 
-    def dump_me(self, login: str, password: str):
+    def dump_me(self, login: str, password: str, parentAccount: bool):
         with open(self.path, 'w') as f:
-            json.dump({login:password}, f)
+            json.dump([login,password,parentAccount], f)
 
-    def clear_me(self):
+    def clear_me(self, parentAccount: bool):
         with open(self.path, 'w') as f:
-            f.write('{}')
+            json.dump(["","",parentAccount],f)
