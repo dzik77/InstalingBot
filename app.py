@@ -4,6 +4,7 @@ from tkinter.messagebox import askyesno
 from InstalingBOT import InstalingBOT as Bot
 from Utilities import resoursce_path
 from User import User
+from PIL import Image, ImageTk
 
 class App(tk.Tk):
     def __init__(self):
@@ -11,9 +12,14 @@ class App(tk.Tk):
 
         # configure the root window
         self.title('INSTALING SCRAPER 1.0')
-        self.geometry('300x200')
+        self.geometry('300x250')
         self.resizable(False,False)
-        self.iconbitmap(resoursce_path("logo.ico"))
+        #self.iconbitmap("/home/dzik77/Dev/InstalingBot/logo.png")
+        #self.iconbitmap(resoursce_path("logo.ico")) to fix
+
+#        icon = Image.open("logo.png")  # Convert your .ico to .png
+ #       icon = ImageTk.PhotoImage(icon)
+  #      self.iconphoto(True, icon)
 
         self.login = tk.StringVar()
         self.password = tk.StringVar()

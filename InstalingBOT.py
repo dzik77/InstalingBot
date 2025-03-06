@@ -12,6 +12,7 @@ import random
 import pickle
 import os
 import math
+import tempfile
 
 class InstalingBOT:
 
@@ -20,8 +21,8 @@ class InstalingBOT:
     EPSILON = 1e-9
     Words = {}
 
-    manageOptionsPath = '/html/body/div[2]/div[2]/div[2]/div[2]/div[2]/button[2]/p'
-    confirmChoicesPath = '/html/body/div[2]/div[2]/div[3]/div[3]/div[2]/button[2]/p'
+    ManageOptionsPath = '/html/body/div[2]/div[2]/div[2]/div[2]/div[2]/button[2]/p'
+    ConfirmChoicesPath = '/html/body/div[2]/div[2]/div[3]/div[3]/div[2]/button[2]/p'
 
     LoginButtonPath = '/html/body/nav/a[2]'
     LoginPath = '/html/body/div[1]/div[3]/form/div/div[1]/div[1]'
@@ -37,7 +38,7 @@ class InstalingBOT:
     ContinueSessionPath = '//*[@id="continue_session_button"]'
 
     SpanishQueryPath = '/html/body/div/div[8]/div[1]/div[1]'
-    QueryPath = '/html/body/div/div[8]/div[1]/div[2]/div[2]'
+    PolishQueryPath = '/html/body/div/div[8]/div[1]/div[2]/div[2]'
     PromptPath = '//*[@id="answer"]'
     SubmitPath = '//*[@id="check"]'
     SpanishAnswerPath = '/html/body/div/div[9]/div[1]/div[1]'
@@ -50,51 +51,68 @@ class InstalingBOT:
 
     def __init__(self):
 
+        #Chrome option for protection
         self.ChromeOptions = webdriver.ChromeOptions()
+        unique_profile = tempfile.mkdtemp()
+        self.ChromeOptions.add_argument(f"--user-data-dir={unique_profile}")
         self.ChromeOptions.add_argument("--disable-search-engine-choice-screen")
         self.ChromeOptions.add_argument("--disable-blink-features=AutomationControlled")
         self.ChromeOptions.add_experimental_option("excludeSwitches", ["enable-automation"])
         self.ChromeOptions.add_experimental_option("useAutomationExtension", False)
         self.ChromeOptions.headless = False
 
+        #decoding Words
         self.Wordspath = resoursce_path("Words.pkl")
         if os.path.getsize(self.Wordspath) > 0:
             with open(self.Wordspath,"rb") as pickle_file:
                 self.Words = pickle.load(pickle_file)
+
     def open_web_browser(self):
         try:
             self.driver = webdriver.Chrome(options=self.ChromeOptions)
+            self.driver = webdriver.Chrome()
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             self.driver.maximize_window()
             self.driver.get('https://instaling.pl/')
         except WebDriverException as e:
             print(f"Error: {str(e)}")
             return 1
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return 1
         return 0
 
     def close_web_browser(self):
-        self.driver.quit()
+        try:
+            self.driver.quit()
+        except WebDriverException as e:
+            print(f"Error: {str(e)}")
+        except Exception as e:
+            print(f"Error: {str(e)}")
     def init_login_password(self,login:str, password:str):
         self.loginData = login
         self.passwordData = password
     def save_progress(self):
         for v in self.Words.values():
-            v[3] = False
+            v[2] = False
         with open(self.Wordspath,"wb") as pickle_file:
             pickle.dump(self.Words,pickle_file)
 
     def cookies(self) -> int: #deprecated
         try:
 
-            manageOptions = self.driver.find_element(By.XPATH, self.manageOptionsPath)
-            self.move_to_click(manageOptions)
+            manageOptions = self.driver.find_element(By.XPATH, self.ManageOptionsPath)
+            self.move_and_click(manageOptions)
 
-            confirmChoices = self.driver.find_element(By.XPATH, self.confirmChoicesPath)
-            self.move_to_click(confirmChoices)
+            confirmChoices = self.driver.find_element(By.XPATH, self.ConfirmChoicesPath)
+            self.move_and_click(confirmChoices)
         except NoSuchElementException as e:
             print(f"ERROR: {str(e)}, XPATH Changed")
             return 1
         except WebDriverException as e:
+            print(f"Error: {str(e)}")
+            return 1
+        except Exception as e:
             print(f"Error: {str(e)}")
             return 1
         return 0
@@ -103,13 +121,13 @@ class InstalingBOT:
         try:
 
             loginButton = self.driver.find_element(By.XPATH, self.LoginButtonPath)
-            self.move_to_click(loginButton)
+            self.move_and_click(loginButton)
 
             loginEnter = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.LoginPath)))
             self.slow_type(loginEnter,self.loginData)
 
             showPassword = self.driver.find_element(By.XPATH, self.ShowPasswordPath)
-            self.move_to_click(showPassword)
+            self.move_and_click(showPassword)
 
             passwordEnter = self.driver.find_element(By.XPATH,self.PasswordPath)
             #self.slow_type(passwordEnter,self.passwordData)
@@ -125,7 +143,7 @@ class InstalingBOT:
             time.sleep(random.uniform(0.8,2.0)) #Data enter
 
             enterData = self.driver.find_element(By.XPATH, self.ConfirmLoginPath)
-            self.move_to_click(enterData)
+            self.move_and_click(enterData)
 
         except NoSuchElementException as e:
             print(f"NO such element: {str(e)}")
@@ -136,17 +154,23 @@ class InstalingBOT:
         except WebDriverException as e:
             print(f"Error: {str(e)}")
             return 1
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return 1
         return 0
 
     def logout(self) -> int:
         try:
             time.sleep(random.uniform(0.5,1.0)) # logout
             logout = WebDriverWait(self.driver,3).until(EC.presence_of_element_located((By.XPATH,self.LogOutPath)))
-            self.move_to_click(logout)
+            self.move_and_click(logout)
         except TimeoutException as e:
             print(f"TLE: {str(e)}")
             return 1
         except WebDriverException as e:
+            print(f"Error: {str(e)}")
+            return 1
+        except Exception as e:
             print(f"Error: {str(e)}")
             return 1
         return 0
@@ -156,16 +180,19 @@ class InstalingBOT:
 
             time.sleep(random.uniform(0.5,1.0)) # logout
             WordsEnter = WebDriverWait(self.driver,3).until(EC.presence_of_element_located((By.XPATH,self.WordsEnterPath)))
-            self.move_to_click(WordsEnter)
+            self.move_and_click(WordsEnter)
 
             time.sleep(random.uniform(0.5, 1.0))  # logout
             StartLearning = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, self.StartLearningPath)))
-            self.move_to_click(StartLearning)
+            self.move_and_click(StartLearning)
 
         except TimeoutException as e:
             print(f"TLE: {str(e)}")
             return 1
         except WebDriverException as e:
+            print(f"Error: {str(e)}")
+            return 1
+        except Exception as e:
             print(f"Error: {str(e)}")
             return 1
         return 0
@@ -174,14 +201,18 @@ class InstalingBOT:
 
         try:
 
+            time.sleep(1)
+
             startSession = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH,self.StartSessionPath)))
-            self.move_to_click(startSession)
+            self.move_and_click(startSession)
 
-            startSession2 = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, self.StartSession2Path)))
+            time.sleep(3)
+
+            startSession2 = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, self.StartSession2Path)))
             if not startSession2.is_displayed():
-                startSession2 = self.driver.find_element(By.XPATH,self.ContinueSessionPath)
+                startSession2 = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, self.ContinueSessionPath)))
 
-            self.move_to_click(startSession2)
+            self.move_and_click(startSession2)
 
         except NoSuchElementException as e:
             print(f"ERROR: {str(e)}")
@@ -192,6 +223,9 @@ class InstalingBOT:
         except WebDriverException as e:
             print(f"Error: {str(e)}")
             return 1
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return 1
 
         time.sleep(random.uniform(0.5,1.0))
         backToMenu = None
@@ -199,24 +233,27 @@ class InstalingBOT:
         while(session):
             try:
                 time.sleep(random.uniform(0.5,1.0))
-                query = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.QueryPath)))
+                polishQuery = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.PolishQueryPath)))
+                spanishQuery = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.SpanishQueryPath)))
                 submit = self.driver.find_element(By.XPATH, self.SubmitPath)
 
-                Qrtext = query.text
-                val = self.Words.get(query.text)
+                polishQueryText = polishQuery.text
+                spanishQueryText = spanishQuery.text
+                val = self.Words.get((spanishQueryText,polishQueryText))
                 if val is not None:
-                    if val[3] or random.uniform(0,100) <= val[1]:
+                    if val[2] or random.uniform(0,1) <= self.knowledge(val[1]):
                         prompt = self.driver.find_element(By.XPATH, self.PromptPath)
                         self.slow_type(prompt,val[0])
                     else:
-                        val[3] = True
+                        val[2] = True
 
                 time.sleep(random.uniform(0.5,1.0))
-                self.move_to_click(submit)
+                self.move_and_click(submit)
 
                 time.sleep(random.uniform(0.5,1.0))
                 next = WebDriverWait(self.driver, 10).until(
                     EC.element_to_be_clickable((By.XPATH, self.NextPath)))
+
                 # out dated, there is only one button
                 #if not next.is_displayed():
                 #    next = WebDriverWait(self.driver, 10).until(
@@ -225,12 +262,12 @@ class InstalingBOT:
 
                 if val is None:
                     answer = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.AnswerPath)))
-                    self.Words[Qrtext] = [answer.text, self.DEFAULT_NEW_WORD_PERCENTAGE, 1, True]
-                else:
-                    self.Words.get(Qrtext)[1] = self.progress(val[1],val[2])
-                    self.Words.get(Qrtext)[2] += 1
+                    self.Words[(spanishQueryText,polishQueryText)] = [answer.text, 1, True]
+                elif not val[2]:
+                    val[1] += 1
+                    val[2] = True
 
-                self.move_to_click(next)
+                self.move_and_click(next)
 
                 backToMenu = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.BackToMainPath)))
                 if backToMenu.is_displayed():
@@ -248,9 +285,12 @@ class InstalingBOT:
             except WebDriverException as e:
                 print(f"Error: {str(e)}")
                 return 1
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                return 1
 
         try:
-            self.move_to_click(backToMenu)
+            self.move_and_click(backToMenu)
         except NoSuchElementException as e:
             print(f"ERROR: {str(e)}")
             return 1
@@ -260,10 +300,13 @@ class InstalingBOT:
         except WebDriverException as e:
             print(f"Error: {str(e)}")
             return 1
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            return 1
         return 0
 
 
-    def move_to_click(self,button):
+    def move_and_click(self, button):
         ActionChains(self.driver).move_to_element(button).click(button).perform()
 
     def slow_type(self, input: WebElement, text: str):
@@ -274,19 +317,23 @@ class InstalingBOT:
             action.pause(random.uniform(kps - 0.05, kps + 0.05))
         action.perform()
 
-    def progress(self, value, call_count):
-        K = 10
-        if (abs(50.0 - value) < self.EPSILON):
-            Increment = K
-        else:
-            Increment = K / (math.sqrt(call_count))
-        value += Increment
-        if (abs(self.WORD_MAX_VALUE - value) < self.EPSILON):
-            value = self.WORD_MAX_VALUE
-        return value
+    def knowledge(self, x):
+        return math.log(min(x+1,21),10) / math.log(21,10)
+
+    # depracated
+    #def progress(self, value, call_count):
+    #    K = 10
+    #    if (abs(50.0 - value) < self.EPSILON):
+    #        Increment = K
+    #    else:
+    #        Increment = K / (math.sqrt(call_count))
+    #    value += Increment
+    #    if (abs(self.WORD_MAX_VALUE - value) < self.EPSILON):
+    #        value = self.WORD_MAX_VALUE
+    #    return value
 
     def show_my_words(self):
         cnt = 1
         for k,v in self.Words.items():
-            print(f'{cnt}: Query="{k}" : Answer="{v[0]}", Knowledge={v[1]}, ProgressCallCount={v[2]}, SecondTime={v[3]}')
+            print(f'{cnt}: SpanishQuery="{k[0]}", PolishQuery="{k[1]}" : Answer="{v[0]}", Knowledge={round(self.knowledge(v[1]) * 100,2)}% , ProgressCallCount={v[1]}, SecondTime={v[2]}')
             cnt+=1
