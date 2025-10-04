@@ -90,8 +90,7 @@ See more tips in [INSTALL.md](./INSTALL.md).
 Issues and pull requests are welcome. Please open an [issue](https://github.com/dzik77/InstalingBot/issues) to report bugs or suggest improvements.
 
 ## License
-
-See [LICENSE](./LICENSE) for licensing information (if present).
+This project is licensed under the MIT License — see the [LICENSE](./LICENSE) file for details.
 
 ## Disclaimer
 
