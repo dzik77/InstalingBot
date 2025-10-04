@@ -1,3 +1,4 @@
+from PIL.ImagePalette import make_gamma_lut
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
@@ -46,8 +47,8 @@ class InstalingBOT:
     NextPath = '//*[@id="nextword"]'
     NextGoodPath = '//*[@id="next_word"]'
 
-    BackToMainPath = '//*[@id="return_mainpage"]'
-    LogOutPath = '/html/body/div[1]/div[2]/div/p[10]/a'
+    BackToMainPath = '/html/body/div[1]/div[12]/div[2]'
+    LogOutPath = '/html/body/div[1]/div[2]/div[8]/p[6]/a'
 
     def __init__(self):
 
@@ -101,6 +102,9 @@ class InstalingBOT:
     def cookies(self) -> int: #deprecated
         try:
 
+            if not self.can_be_clicked(self.ManageOptionsPath):
+                return 0
+
             manageOptions = self.driver.find_element(By.XPATH, self.ManageOptionsPath)
             self.move_and_click(manageOptions)
 
@@ -119,6 +123,9 @@ class InstalingBOT:
     def login(self) -> int:
 
         try:
+
+            if not self.can_be_clicked(self.LoginButtonPath):
+                return 0
 
             loginButton = self.driver.find_element(By.XPATH, self.LoginButtonPath)
             self.move_and_click(loginButton)
@@ -230,6 +237,7 @@ class InstalingBOT:
         time.sleep(random.uniform(0.5,1.0))
         backToMenu = None
         session = True
+        answeredWords = 0
         while(session):
             try:
                 time.sleep(random.uniform(0.5,1.0))
@@ -244,6 +252,7 @@ class InstalingBOT:
                     if val[2] or random.uniform(0,1) <= self.knowledge(val[1]):
                         prompt = self.driver.find_element(By.XPATH, self.PromptPath)
                         self.slow_type(prompt,val[0])
+                        answeredWords += 1
                     else:
                         val[2] = True
 
@@ -269,10 +278,8 @@ class InstalingBOT:
 
                 self.move_and_click(next)
 
-                backToMenu = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, self.BackToMainPath)))
-                if backToMenu.is_displayed():
+                if self.can_be_clicked(self.BackToMainPath):
                     session = False
-
 
             except NoSuchElementException as e:
                 print(f"ERROR: {str(e)}")
@@ -290,6 +297,8 @@ class InstalingBOT:
                 return 1
 
         try:
+            backToMenu = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, self.BackToMainPath)))
             self.move_and_click(backToMenu)
         except NoSuchElementException as e:
             print(f"ERROR: {str(e)}")
@@ -305,6 +314,12 @@ class InstalingBOT:
             return 1
         return 0
 
+    def can_be_clicked(self, XPath: str):
+        try:
+            button = WebDriverWait(self.driver,3).until(EC.element_to_be_clickable((By.XPATH,XPath)))
+            return True
+        except TimeoutException:
+            return False
 
     def move_and_click(self, button):
         ActionChains(self.driver).move_to_element(button).click(button).perform()
