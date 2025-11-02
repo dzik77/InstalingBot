@@ -71,7 +71,6 @@ class InstalingBOT:
     def open_web_browser(self):
         try:
             self.driver = webdriver.Chrome(options=self.ChromeOptions)
-            self.driver = webdriver.Chrome()
             self.driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             self.driver.maximize_window()
             self.driver.get('https://instaling.pl/')
